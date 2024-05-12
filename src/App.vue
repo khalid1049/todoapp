@@ -1,18 +1,54 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
 const newtodo = ref()
 const todos = ref([])
+// const status = ref(false)
 function addTodos() {
   if (newtodo.value) {
     todos.value.push({
+      id: uuidv4(),
       text: newtodo.value,
       done: false
     })
     newtodo.value = ''
+    console.log(todos.value)
   } else {
     alert('Please enter a todo')
   }
+}
+
+function removeToDo(id) {
+  // console.log(id)
+  todos.value = todos.value.filter((todo) => todo.id !== id)
+}
+
+const todoType = ref('all')
+
+const filteredTodo = computed(() => {
+  if (todoType.value === 'active') {
+    return todos.value.filter((todo) => !todo.done)
+  } else if (todoType.value === 'complete') {
+    return todos.value.filter((todo) => todo.done)
+  }
+  return todos.value
+})
+
+function removeCompletedTodos() {
+  const findTodosCompleted = todos.value.filter((e) => !e.done)
+  // findTodosCompleted.pop()
+  todos.value = findTodosCompleted
+
+  // console.log(findTodosCompleted)
+}
+// const updateStatus = (todo) => {
+//   // console.log(status.value)
+//   todos.value.find((td) => td.id === todo.id).done = !todo.done
+// }
+
+function hasCompleted() {
+  return todos.value.filter((e) => e.done).length
 }
 </script>
 
@@ -34,23 +70,33 @@ function addTodos() {
         <label class="toggle-all-label" for="toggle-all">Mark all as complete</label>
       </div>
       <ul class="todo-list">
-        <li data-id="4" class="" v-for="todo in todos" :key="todo">
+        <li data-id="4" class="" v-for="todo in filteredTodo" :key="todo">
           <div class="view">
-            <input class="toggle" type="checkbox" />
-            <label>{{ todo }}</label>
-            <button class="destroy"></button>
+            <input class="toggle" type="checkbox" v-model="todo.done" />
+
+            <label>{{ todo.text }}</label>
+            <button class="destroy" @click="removeToDo(todo.id)"></button>
           </div>
         </li>
       </ul>
     </main>
     <footer class="footer" style="display: block">
-      <span class="todo-count"><strong>2</strong> items left</span>
+      <span class="todo-count"
+        ><strong> {{ todos.length }} </strong> items left</span
+      >
       <ul class="filters">
-        <li><a href="#/" class="selected">All</a></li>
-        <li><a href="#/active" class="">Active</a></li>
-        <li><a href="#/completed">Completed</a></li>
+        <li><a href="#/" class="selected" @click.prevent="todoType = 'all'">All</a></li>
+        <li><a href="#/active" class="" @click.prevent="todoType = 'active'">Active</a></li>
+        <li><a href="#/completed" @click.prevent="todoType = 'complete'">Completed</a></li>
       </ul>
-      <button class="clear-completed" style="display: block">Clear completed</button>
+      <button
+        class="clear-completed"
+        v-if="hasCompleted()"
+        @click="removeCompletedTodos()"
+        style="display: block"
+      >
+        Clear completed
+      </button>
     </footer>
   </section>
 </template>
